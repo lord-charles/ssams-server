@@ -23,9 +23,9 @@ router.post("/get/county/payam/schools/students", getStudentsInSchool);
 
 router.get("/get/2023_data", dataSet_2023);
 router.get("/get/2023_data/county", countyPupilTotal_2023);
-router.get("/get/2023_data/county/payam", countyPayamPupilTotals_2023);
-router.get("/get/2023_data/county/payam/schools", payamSchoolPupilTotals_2023);
-router.get(
+router.post("/get/2023_data/county/payam", countyPayamPupilTotals_2023);
+router.post("/get/2023_data/county/payam/schools", payamSchoolPupilTotals_2023);
+router.post(
   "/get/2023_data/county/payam/schools/students",
   getStudentsInSchool_2023
 );
