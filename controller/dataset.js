@@ -436,6 +436,11 @@ const getStudentsInSchool_2023 = async (req, res) => {
           "Unique Received P5 Girls": 1,
           "Unique Received New Schools": 1,
           "Unique Received": 1,
+          isPending,
+          isDisbursed,
+          attendance,
+          correctionReason,
+          isAlpProgram,
         },
       },
     ];
