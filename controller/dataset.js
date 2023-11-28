@@ -204,6 +204,10 @@ const getStudentsInSchool = async (req, res) => {
   }
 };
 
+
+
+// 2023 data
+
 const dataSet_2023 = async (req, res) => {
   try {
     const {
@@ -447,6 +451,50 @@ const getStudentsInSchool_2023 = async (req, res) => {
   }
 };
 
+const updateSchoolDataFields_2023 = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateFields = req.body;
+
+    // Validate if any fields are provided in req.body
+    if (Object.keys(updateFields).length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No fields to update provided in req.body" });
+    }
+
+    const schoolData = await SchoolData.findByIdAndUpdate(id, updateFields, {
+      new: true,
+    });
+
+    if (!schoolData) {
+      return res.status(404).json({ message: "School data not found" });
+    }
+
+    res.status(200).json(schoolData);
+  } catch (error) {
+    if (error.code === 79) {
+      return res.status(200).json({ success: true });
+    }
+  }
+};
+
+const getSingleStudents_2023 = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await SchoolData.findById(id);
+
+    if (!student) {
+      return res.status(404).json({ message: "no student found!" });
+    }
+
+    res.status(200).json(student);
+  } catch (error) {
+    res.status(500).json({ message: error });
+  }
+};
+
 module.exports = {
   dataSet,
   countyPupilTotal,
@@ -458,6 +506,8 @@ module.exports = {
   countyPayamPupilTotals_2023,
   payamSchoolPupilTotals_2023,
   getStudentsInSchool_2023,
+  updateSchoolDataFields_2023,
+  getSingleStudents_2023,
 };
 
 
