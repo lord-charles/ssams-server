@@ -391,64 +391,10 @@ const getStudentsInSchool_2023 = async (req, res) => {
         .json({ success: false, error: "School name is required" });
     }
 
-    // Aggregate pipeline to match the schoolName and project all relevant fields
-    const pipeline = [
-      {
-        $match: { school: schoolName }, // Use school instead of schoolName
-      },
-      {
-        $project: {
-          year: 1,
-          state28: 1,
-          stateName28: 1,
-          county28: 1,
-          payam28: 1,
-          state10: 1,
-          stateName10: 1,
-          county10: 1,
-          payam10: 1,
-          school: 1,
-          code: 1,
-          education: 1,
-          form: 1,
-          formstream: 1,
-          gender: 1,
-          dob: 1,
-          age: 1,
-          "first name": 1,
-          "middle name": 1,
-          "last name": 1,
-          "Learner UniqueID": 1,
-          reference: 1,
-          over18: 1,
-          eligible: 1,
-          "Date Validated at School": 1,
-          "CTEF received at SA": 1,
-          "CTEF Serial number": 1,
-          "Date corrected on SSSAMS": 1,
-          "Date Approved": 1,
-          "Signature on Payment List": 1,
-          "Date Collected at School": 1,
-          "Accountability CTEF Received": 1,
-          "Accountability CTEF Serial number": 1,
-          "CT Paid": 1,
-          "Date CT Paid": 1,
-          "Unique Received P5 Girls": 1,
-          "Unique Received New Schools": 1,
-          "Unique Received": 1,
-          isPending,
-          isDisbursed,
-          attendance,
-          correctionReason,
-          isAlpProgram,
-        },
-      },
-    ];
+    // Use the find method to get documents matching the schoolName
+    const result = await SchoolData.find({ school: schoolName });
 
-    // Execute the aggregation pipeline
-    const result = await SchoolData.aggregate(pipeline);
-
-    // Return the result
+    // Return the formatted result
     res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching students in school:", error);
