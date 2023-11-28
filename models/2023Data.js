@@ -49,6 +49,39 @@ const schoolDataSchema = new mongoose.Schema({
   uniqueReceivedP5Girls: Number,
   uniqueReceivedNewSchools: Number,
   uniqueReceived: Number,
+  attendance: {
+    type: String,
+    required: false,
+  },
+  correctionReason: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  isAlpProgram: [
+    {
+      guardianName: {
+        type: String,
+        default: "",
+        required: false,
+      },
+      Contact: {
+        type: String,
+        default: "",
+        required: false,
+      },
+      relevantCode: {
+        type: String,
+        default: "",
+        required: false,
+      },
+      ctefSerialNo: {
+        type: String,
+        default: "",
+        required: false,
+      },
+    },
+  ],
 });
 
 // Create a Mongoose model based on the schema
