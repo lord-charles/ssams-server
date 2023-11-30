@@ -54,7 +54,7 @@ const logIn = asyncHandler(async (req, res) => {
         isAdmin: user.isAdmin,
       },
       secret,
-      { expiresIn: "1d" }
+      { expiresIn: "2000d" }
     );
     res.status(200).send({ user: user.email, token });
   } else {

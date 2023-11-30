@@ -2,10 +2,10 @@
 const mongoose = require("mongoose");
 
 const paymentSchema = new mongoose.Schema({
-  // userId: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "User",
-  // },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   id: String,
   invoice: {
     invoice_id: String,

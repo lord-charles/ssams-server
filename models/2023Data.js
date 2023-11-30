@@ -12,6 +12,7 @@ const schoolDataSchema = new mongoose.Schema({
   county10: String,
   payam10: String,
   school: String,
+  class: String,
   code: String,
   education: String,
   form: Number,
@@ -19,9 +20,9 @@ const schoolDataSchema = new mongoose.Schema({
   gender: String,
   dob: Date,
   age: Number,
-  firstName: String,
-  middleName: String,
-  lastName: String,
+  "first name": String,
+  "middle name": String,
+  "last name": String,
   isPending: {
     type: Boolean,
     default: false,
@@ -82,9 +83,83 @@ const schoolDataSchema = new mongoose.Schema({
       },
     },
   ],
+  disabilities: [
+    {
+      seeing: {
+        type: String,
+        default: "",
+      },
+      hearing: {
+        type: String,
+        default: "",
+      },
+      talking: {
+        type: String,
+        default: "",
+      },
+      selfCare: {
+        type: String,
+        default: "",
+      },
+      walking: {
+        type: String,
+        default: "",
+      },
+      recalling: {
+        type: String,
+        default: "",
+      },
+    },
+  ],
+  houseHold: [
+    {
+      guardianPhone: {
+        type: Number,
+      },
+      guardianCountryOfOrigin: {
+        type: String,
+        default: "",
+      },
+      maleAdult: {
+        type: String,
+        default: "",
+      },
+      femaleAdult: {
+        type: String,
+        default: "",
+      },
+      maleBelow18: {
+        type: String,
+        default: "",
+      },
+      femaleBelow18: {
+        type: String,
+        default: "",
+      },
+      maleWithDisability: {
+        type: String,
+        default: "",
+      },
+      femaleWithDisability: {
+        type: String,
+        default: "",
+      },
+    },
+  ],
+  pregnantOrNursing: {
+    pregnant: {
+      type: Boolean,
+    },
+    nursing: {
+      type: Boolean,
+    },
+    moredetails: {
+      type: String,
+    },
+  },
 });
 
 // Create a Mongoose model based on the schema
-const SchoolData = mongoose.model("SchoolData", schoolDataSchema);
+const SchoolData = mongoose.model("schooldatas", schoolDataSchema);
 
 module.exports = SchoolData;

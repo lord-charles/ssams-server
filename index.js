@@ -6,10 +6,11 @@ const { notFound, errorHandler } = require("./middlewares/error-handler");
 const dotenv = require("dotenv");
 dotenv.config();
 const PORT = process.env.PORT || 8000;
-
-const dataSet = require("./routes/dataset");
-
 const dbConnect = require("./config/dbConnect");
+const dataSet = require("./routes/dataset");
+const usersRouter = require("./routes/userAuth");
+
+
 
 dbConnect();
 // apply middlewares
@@ -18,6 +19,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/data-set", dataSet);
+app.use("/user", usersRouter);
+
 
 
 //error handlers

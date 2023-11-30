@@ -6,6 +6,10 @@ const categorySchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    title2: {
+      type: String,
+      required: true,
+    },
     icon: {
       type: String,
       required: true,

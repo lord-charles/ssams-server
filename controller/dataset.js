@@ -204,8 +204,6 @@ const getStudentsInSchool = async (req, res) => {
   }
 };
 
-
-
 // 2023 data
 
 const dataSet_2023 = async (req, res) => {
@@ -446,6 +444,133 @@ const getSingleStudents_2023 = async (req, res) => {
   }
 };
 
+// 2024
+
+const registerStudent2024 = async (req, res) => {
+  try {
+    // Extract registration data from the request body
+    const {
+      year,
+      state,
+      stateName,
+      county,
+      countryOfOrigin,
+      payam,
+      schoolName,
+      education,
+      class: studentClass,
+      gender,
+      dob,
+      firstName,
+      middleName,
+      lastName,
+      disabilities,
+      houseHold,
+      pregnantOrNursing,
+    } = req.body;
+
+     const generateUniqueCode = () => {
+       const currentDate = new Date();
+       const year = String(currentDate.getFullYear()).slice(-2); // Get the last two digits of the year
+       const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+       const day = String(currentDate.getDate()).padStart(2, "0");
+       let hours = String(currentDate.getHours() + 3).padStart(2, "0");
+       const minutes = String(currentDate.getMinutes()).padStart(2, "0");
+       const seconds = String(currentDate.getSeconds()).padStart(2, "0");
+
+       // Convert hours to 12-hour format
+       if (hours > 12) {
+         hours -= 12;
+       }
+
+       return `${year}${month}${day}${hours}${minutes}${seconds}`;
+     };
+
+    // Create a new instance of the RegistrationData model
+    const newRegistration2023 = new SchoolData({
+      year,
+      state,
+      stateName,
+      county28: county,
+      countryOfOrigin,
+      payam28: payam,
+      school: schoolName,
+      education,
+      class: studentClass,
+      gender,
+      dob,
+      "first name": firstName,
+      "middle name": middleName,
+      "last name": lastName,
+      disabilities,
+      houseHold,
+      pregnantOrNursing,
+      reference: generateUniqueCode(),
+    });
+
+    // const newRegistration2024 = new SchoolData2024({
+    //   year,
+    //   state,
+    //   stateName,
+    //   county,
+    //   countryOfOrigin,
+    //   payam,
+    //   school: schoolName,
+    //   education,
+    //   class: studentClass,
+    //   gender,
+    //   dob,
+    //   firstName,
+    //   middleName,
+    //   lastName,
+    //   disabilities,
+    //   houseHold,
+    //   pregnantOrNursing,
+    // });
+
+    // Save the registration data to the database
+    const reg = await newRegistration2023.save();
+    console.log(reg);
+
+    // await newRegistration2024.save();
+
+    // Respond with a success message
+    res
+      .status(201)
+      .json({ success: true, message: "student registered successfully." });
+  } catch (error) {
+    console.log(error);
+    // Handle errors and respond with an error message
+    if (error.code === 79) {
+      res
+        .status(200)
+        .json({ success: true, message: "student registed successfully" });
+    } else {
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error." });
+    }
+  }
+};
+
+const deleteStudentById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the student by ID and remove them
+    const deletedStudent = await SchoolData.findByIdAndRemove(id);
+
+    if (!deletedStudent) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    return res.status(200).json({ message: "Student deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   dataSet,
   countyPupilTotal,
@@ -459,6 +584,8 @@ module.exports = {
   getStudentsInSchool_2023,
   updateSchoolDataFields_2023,
   getSingleStudents_2023,
+  registerStudent2024,
+  deleteStudentById,
 };
 
 
