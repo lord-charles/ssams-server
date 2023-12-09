@@ -289,15 +289,17 @@ const statePupilTotal_2023 = async (req, res) => {
     const pipeline = [
       {
         $group: {
-          _id: "$state10", 
-          totalPupils: { $sum: 1 }, 
+          _id: "$state10",
+          totalPupils: { $sum: 1 },
+          ids: { $push: "$_id" }, // Include the MongoDB _id in an array
         },
       },
       {
         $project: {
-          state: "$_id", 
-          totalPupils: 1,
+          state: "$_id",
+          totalPupils: "$totalPupils",
           _id: 0,
+          id: { $arrayElemAt: ["$ids", 0] }, // Use $arrayElemAt to get the first element of the ids array
         },
       },
     ];
@@ -312,45 +314,45 @@ const statePupilTotal_2023 = async (req, res) => {
 };
 
 const countyPupilTotal_2023 = async (req, res) => {
-   try {
-     // Extract county28 from the request parameters
-     const { state } = req.body;
+  try {
+    // Extract county28 from the request parameters
+    const { state } = req.body;
 
-     // Validate if state is provided
-     if (!state) {
-       return res
-         .status(400)
-         .json({ success: false, error: "state name is required" });
-     }
+    // Validate if state is provided
+    if (!state) {
+      return res
+        .status(400)
+        .json({ success: false, error: "state name is required" });
+    }
 
-     // Fetch data from the database
-     const result = await SchoolData.aggregate([
-       {
-         $match: { state10: state },
-       },
-       {
-         $group: {
-           _id: "$county28",
-           totalPupils: { $sum: 1 },
-           id: { $push: "$_id" }, // Include the MongoDB _id in an array
-         },
-       },
-       {
-         $project: {
-           _id: "$_id",
-           totalPupils: "$totalPupils",
-           id: { $arrayElemAt: ["$id", 0] }, // Use $arrayElemAt to get the first element of the ids array
-         },
-       },
-     ]);
+    // Fetch data from the database
+    const result = await SchoolData.aggregate([
+      {
+        $match: { state10: state },
+      },
+      {
+        $group: {
+          _id: "$county28",
+          totalPupils: { $sum: 1 },
+          id: { $push: "$_id" }, // Include the MongoDB _id in an array
+        },
+      },
+      {
+        $project: {
+          _id: "$_id",
+          totalPupils: "$totalPupils",
+          id: { $arrayElemAt: ["$id", 0] }, // Use $arrayElemAt to get the first element of the ids array
+        },
+      },
+    ]);
 
-     // Return the result
-     res.status(200).json(result);
-   } catch (error) {
-     console.error("Error fetching county state pupil totals:", error);
-     res.status(500).json({ success: false, error: "Internal Server Error" });
-   }
-}
+    // Return the result
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching county state pupil totals:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
 
 const countyPayamPupilTotals_2023 = async (req, res) => {
   try {
