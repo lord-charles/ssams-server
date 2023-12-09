@@ -332,6 +332,14 @@ const countyPupilTotal_2023 = async (req, res) => {
          $group: {
            _id: "$county28",
            totalPupils: { $sum: 1 },
+           id: { $push: "$_id" }, // Include the MongoDB _id in an array
+         },
+       },
+       {
+         $project: {
+           _id: "$_id",
+           totalPupils: "$totalPupils",
+           id: { $arrayElemAt: ["$id", 0] }, // Use $arrayElemAt to get the first element of the ids array
          },
        },
      ]);
