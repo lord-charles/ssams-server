@@ -284,18 +284,18 @@ const buildSortObject = (sortBy, sortOrder) => {
   return sort;
 };
 
-const countyPupilTotal_2023 = async (req, res) => {
+const statePupilTotal_2023 = async (req, res) => {
   try {
     const pipeline = [
       {
         $group: {
-          _id: "$county28", // Use county28 instead of countyName
-          totalPupils: { $sum: 1 }, // Count documents per county
+          _id: "$state10", 
+          totalPupils: { $sum: 1 }, 
         },
       },
       {
         $project: {
-          countyName: "$_id", // Rename _id to countyName
+          state: "$_id", 
           totalPupils: 1,
           _id: 0,
         },
@@ -306,10 +306,43 @@ const countyPupilTotal_2023 = async (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error fetching county pupil totals:", error);
+    console.error("Error fetching state pupil totals:", error);
     res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 };
+
+const countyPupilTotal_2023 = async (req, res) => {
+   try {
+     // Extract county28 from the request parameters
+     const { state } = req.body;
+
+     // Validate if state is provided
+     if (!state) {
+       return res
+         .status(400)
+         .json({ success: false, error: "state name is required" });
+     }
+
+     // Fetch data from the database
+     const result = await SchoolData.aggregate([
+       {
+         $match: { state10: state },
+       },
+       {
+         $group: {
+           _id: "$county28",
+           totalPupils: { $sum: 1 },
+         },
+       },
+     ]);
+
+     // Return the result
+     res.status(200).json(result);
+   } catch (error) {
+     console.error("Error fetching county state pupil totals:", error);
+     res.status(500).json({ success: false, error: "Internal Server Error" });
+   }
+}
 
 const countyPayamPupilTotals_2023 = async (req, res) => {
   try {
@@ -400,6 +433,36 @@ const getStudentsInSchool_2023 = async (req, res) => {
   }
 };
 
+const getStudentsInClass_2023 = async (req, res) => {
+  try {
+    // Extract schoolName from the request body
+    const { schoolName, form } = req.body;
+
+    // Validate if schoolName && form is provided
+    if (!schoolName) {
+      return res
+        .status(400)
+        .json({ success: false, error: "School name is required" });
+    }
+
+     if (!form) {
+       return res
+         .status(400)
+         .json({ success: false, error: "Form name is required" });
+     }
+
+    // Use the find method to get documents matching the schoolName
+    const result = await SchoolData.find({ school: schoolName, form:form });
+
+    // Return the formatted result
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching students in school:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
+
+
 const updateSchoolDataFields_2023 = async (req, res) => {
   try {
     const { id } = req.params;
@@ -443,6 +506,7 @@ const getSingleStudents_2023 = async (req, res) => {
     res.status(500).json({ message: error });
   }
 };
+
 
 // 2024
 
@@ -578,9 +642,11 @@ module.exports = {
   payamSchoolPupilTotals,
   getStudentsInSchool,
   dataSet_2023,
+  statePupilTotal_2023,
   countyPupilTotal_2023,
   countyPayamPupilTotals_2023,
   payamSchoolPupilTotals_2023,
+  getStudentsInClass_2023,
   getStudentsInSchool_2023,
   updateSchoolDataFields_2023,
   getSingleStudents_2023,

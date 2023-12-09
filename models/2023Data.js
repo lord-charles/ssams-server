@@ -109,6 +109,12 @@ const schoolDataSchema = new mongoose.Schema({
         type: String,
         default: "",
       },
+      rating: {
+        type: Number,
+        default: 1,
+        min: 1,
+        max: 4,
+      },
     },
   ],
   houseHold: [
