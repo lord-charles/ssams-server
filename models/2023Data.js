@@ -85,68 +85,34 @@ const schoolDataSchema = new mongoose.Schema({
   ],
  disabilities: [
     {
-      difficultySeeing: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+      disabilities: {
+        difficultySeeing: {
+          seeing: "",
+          rating: 0,
         },
-      },
-      difficultyHearing: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+        difficultyHearing: {
+          hearing: "",
+          rating: 0,
         },
-      },
-      difficultyTalking: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+        difficultyTalking: {
+          talking: "",
+          rating: 0,
         },
-      },
-      difficultySelfCare: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+        difficultySelfCare: {
+          selfCare: "",
+          rating: 0,
         },
-      },
-      difficultyWalking: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+        difficultyWalking: {
+          walking: "",
+          rating: 0,
         },
-      },
-      difficultyRecalling: {
-        type: String,
-        default: "",
-        rating: {
-          type: Number,
-          default: 0,
-          min: 0,
-          max: 4,
+        difficultyRecalling: {
+          recalling: "",
+          rating: 0,
         },
       },
     },
-  ], 
+  ],
   houseHold: [
     {
       guardianPhone: {
