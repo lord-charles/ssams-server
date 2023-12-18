@@ -258,12 +258,12 @@ const buildQuery = (
   const query = {};
 
   // Helper function to add a query condition
-  const addQueryCondition = (field, value) => {
-    if (value)
-      query[field] = field.includes("count")
-        ? { $regex: new RegExp(value, "i") }
-        : value;
-  };
+const addQueryCondition = (field, value) => {
+  if (value) {
+    query[field] = { $regex: new RegExp(value, "i") };
+  }
+};
+
 
   addQueryCondition("state28", state28);
   addQueryCondition("county28", county28);

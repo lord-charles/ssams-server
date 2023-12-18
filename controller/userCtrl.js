@@ -1,23 +1,27 @@
 const User = require("../models/userModel");
-const Coupon = require("../models/couponModel");
-const Cart = require("../models/cartModel");
-const Product = require("../models/products");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validateMongodbId = require("../utils/validateMongodbId");
 const sendEmail = require("./emailCtl");
 const asyncHandler = require("express-async-handler");
 const crypto = require("crypto");
-const uniqid = require("uniqid");
-const Order = require("../models/orderModel");
-const UserCart = require("../models/userCartModel");
-const { default: mongoose } = require("mongoose");
 
 //Register AI CHECKED
 const createUser = asyncHandler(async (req, res) => {
-  const { firstname, lastname, email, mobile, password, isAdmin } = req.body;
+  const {
+    firstname,
+    lastname,
+    username,
+    email,
+    phoneNumber,
+    password,
+    isAdmin,
+    userType,
+    dutyAssigned,
+    statesAsigned,
+  } = req.body;
 
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ username });
   if (existingUser) {
     return res.status(400).json({ message: "User already exists" });
   }
@@ -25,10 +29,14 @@ const createUser = asyncHandler(async (req, res) => {
   const user = new User({
     firstname,
     lastname,
+    username,
     email,
-    mobile,
+    phoneNumber,
     passwordHash: await bcrypt.hash(password, 10),
-    isAdmin: isAdmin ?? false,
+    isAdmin,
+    userType,
+    dutyAssigned,
+    statesAsigned,
   });
 
   await user.save();
@@ -39,11 +47,11 @@ const createUser = asyncHandler(async (req, res) => {
 //login AI CHECKED
 const logIn = asyncHandler(async (req, res) => {
   const secret = process.env.SECRET;
-  const { email, password } = req.body;
-  const user = await User.findOne({ email, password });
+  const { username, password } = req.body;
+  const user = await User.findOne({ username, password });
 
   if (!user) {
-    res.status(404).send("Wrong email!");
+    res.status(404).send("username!");
     return;
   }
 
@@ -52,11 +60,14 @@ const logIn = asyncHandler(async (req, res) => {
       {
         userId: user.id,
         isAdmin: user.isAdmin,
+        statesAsigned: user.statesAsigned,
+        dutyAssigned: user.dutyAssigned,
+        userType: user.userType,
       },
       secret,
-      { expiresIn: "2000d" }
+      { expiresIn: "1d" }
     );
-    res.status(200).send({ user: user.email, token });
+    res.status(200).send({ user: user.username, token });
   } else {
     res.status(404).send("Wrong password!");
   }
@@ -84,7 +95,7 @@ const getUsers = asyncHandler(async (req, res) => {
     sortOptions["dateJoined"] = -1;
   }
 
-  let users = await User.find({}, "-__v -passwordHash -wishlist -cart")
+  let users = await User.find({}, "-__v -passwordHash")
     .sort(sortOptions)
     .lean();
 
@@ -131,13 +142,29 @@ const getUserByEmail = asyncHandler(async (req, res) => {
 //update user
 const updateUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { firstname, lastname, email, mobile, password } = req.body;
+  const {
+    firstname,
+    lastname,
+    email,
+    mobile,
+    password,
+    username,
+    statesAsigned,
+    dutyAssigned,
+    userType,
+    isAdmin,
+  } = req.body;
   validateMongodbId(id);
   const updatedFields = {
     firstname,
     lastname,
     email,
     mobile,
+    username,
+    statesAsigned,
+    dutyAssigned,
+    userType,
+    isAdmin,
     passwordHash: password ? await bcrypt.hash(password, 10) : undefined,
   };
 
@@ -146,8 +173,8 @@ const updateUser = asyncHandler(async (req, res) => {
   if (!user) {
     return res.status(404).json({ message: "User not found." });
   }
-  const cart = await Cart.findOne({ orderby: id }).populate("products.product");
-  res.status(200).json(user, cart);
+
+  res.status(200).json(user);
 });
 
 //delete users
@@ -160,6 +187,7 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
   res.status(200).send({ message: "user deleted!" });
 });
+
 //verify token
 const verifyToken = asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
@@ -329,197 +357,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 });
 
-//get wish list
-const getWishlist = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  const findUser = await User.findById(userId).populate("wishlist");
-  res.json(findUser);
-});
-
-//applly coupon
-const applyCoupon = async (req, res) => {
-  const { coupon } = req.body;
-  const { userId } = req.user;
-  validateMongodbId(userId);
-  const validCoupon = await Coupon.findOne({ name: coupon });
-  if (!validCoupon) {
-    return res.status(404).json({ message: "Coupon expired" });
-  }
-  //check if cart exist first
-  const cart = await Cart.findOne({ orderby: userId });
-  if (!cart) {
-    return res.json({ message: "add products to cart first" });
-  }
-
-  const { cartTotal } = await Cart.findOne({ orderby: userId }).select(
-    "cartTotal"
-  );
-
-  if (!cartTotal) {
-    return res.json({ message: "add products to cart first" });
-  }
-
-  const totalAfterDiscount = (
-    cartTotal -
-    (cartTotal * validCoupon.discount) / 100
-  ).toFixed(2);
-  const updatedCart = await Cart.findOneAndUpdate(
-    { orderby: userId },
-    { totalAfterDiscount },
-    { new: true }
-  ).populate("products.product");
-  res.json(updatedCart.totalAfterDiscount);
-};
-
-// Create the order and update product quantities
-const createOrder = asyncHandler(async (req, res) => {
-  // Destructure required data from request body and user object
-  const { paymentMethod, couponApplied } = req.body;
-  const { userId } = req.user;
-
-  // Validate user ID is a valid MongoDB ID
-  validateMongodbId(userId);
-
-  // Find the user by their ID and populate their cart data
-  const userCart = await Cart.findOne({ orderby: userId }).populate(
-    "products.product"
-  );
-
-  if (!userCart) {
-    res.json({ message: "No cart found" });
-  }
-  // Check if payment method is valid
-  if (!["COD", "PAID"].includes(paymentMethod)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid payment method",
-    });
-  }
-
-  // Calculate the final amount based on coupon applied and total after discount
-  let finalAmount =
-    couponApplied && userCart.totalAfterDiscount
-      ? userCart.totalAfterDiscount
-      : userCart.cartTotal;
-
-  // Create a new order with the user's cart data and payment information
-  const newOrder = await new Order({
-    products: userCart.products,
-    paymentIntent: {
-      id: uniqid(),
-      method: paymentMethod,
-      amount: finalAmount,
-      status: paymentMethod === "COD" ? "Cash on Delivery" : "Not Processed",
-      created: Date.now(),
-      currency: "ksh",
-    },
-    orderBy: userId,
-    orderStatus: paymentMethod === "COD" ? "Cash on Delivery" : "Not Processed",
-  }).save();
-
-  // Update the product quantities and sold amounts using bulk write
-  const updateOperations = userCart.products.map(({ product, count }) => ({
-    updateOne: {
-      filter: { _id: product._id },
-      update: { $inc: { quantity: -count, sold: +count } },
-    },
-  }));
-  await Product.bulkWrite(updateOperations);
-
-  // Send success response with order data
-  res.status(200).json({
-    success: true,
-    message: "Order placed successfully",
-    order: newOrder,
-  });
-
-  // Clear the user's cart after successful order placement
-  await Cart.findOneAndDelete({ orderby: userId });
-  await UserCart.updateOne({ userId: userId }, { items: [] });
-});
-
-//get orders
-
-const getOrders = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  const { status } = req.body;
-  validateMongodbId(userId);
-
-  let query = { orderBy: mongoose.Types.ObjectId(userId) };
-
-  if (status) {
-    query = { ...query, orderStatus: status };
-  }
-
-  const userorders = await Order.find(query)
-    .populate({
-      path: "products.product",
-      populate: {
-        path: "images",
-        select: "_id url",
-      },
-    })
-    .populate({
-      path: "orderBy",
-      select: "address _id firstname lastname email mobile",
-    });
-
-  if (!userorders || userorders.length === 0) {
-    return res.status(404).json({ message: "No orders found for user" });
-  }
-
-  res.json(userorders);
-});
-
-//get orders by id
-
-const getOrderById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  validateMongodbId(id);
-
-  const userorders = await Order.findById(id)
-    .populate({
-      path: "products.product",
-      populate: {
-        path: "images",
-        select: "_id url",
-      },
-    })
-    .populate({
-      path: "orderBy",
-      select: "address _id firstname lastname email mobile",
-    });
-
-  if (!userorders) {
-    return res.status(404).json({ message: "order not found" });
-  }
-
-  res.json(userorders);
-});
-
-//get ALLorder
-const getAllOrders = asyncHandler(async (req, res) => {
-  const alluserorders = await Order.find()
-    .populate("products.product")
-    .populate("orderBy")
-    .exec();
-  res.json(alluserorders);
-});
-
-const updateOrderStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
-  const { id } = req.params;
-  validateMongodbId(id);
-  const updateOrderStatus = await Order.findByIdAndUpdate(
-    id,
-    {
-      orderStatus: status,
-    },
-    { new: true }
-  );
-  res.json(updateOrderStatus);
-});
-
 const saveAddress = asyncHandler(async (req, res) => {
   const { userId } = req.user;
   validateMongodbId(userId);
@@ -534,59 +371,6 @@ const saveAddress = asyncHandler(async (req, res) => {
   );
   res.json(updatedUser);
 });
-
-const userCart = asyncHandler(async (req, res) => {
-  const { cart } = req.body;
-  const { userId } = req.user;
-  validateMongodbId(userId);
-
-  // Create an array of product objects
-  const products = await Promise.all(
-    cart.map(async (item) => {
-      const { id, count, color } = item;
-      // Get the price of the product from the database
-      const { price } = await Product.findById(id).select("price");
-      return { product: id, count, color, price };
-    })
-  );
-
-  // Calculate the total cost of the cart
-  const cartTotal = products.reduce(
-    (total, { price, count }) => total + price * count,
-    0
-  );
-
-  // Find the existing cart object and update it with the new data, or create a new cart object if none exists
-  const filter = { orderby: userId };
-  const update = { products, cartTotal };
-  const options = { new: true, upsert: true };
-  const savedCart = await Cart.findOneAndUpdate(filter, update, options);
-
-  // Return the saved cart object as the response
-  res.json(savedCart);
-});
-
-const getUserCart = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
-  validateMongodbId(userId);
-  const cart = await Cart.findOne({ orderby: userId })
-    .populate("products.product")
-    .populate("orderby");
-  res.json(cart);
-});
-
-const emptyCart = async (req, res) => {
-  const { userId } = req.user;
-  validateMongodbId(userId);
-  // Find the user's cart and delete it
-  const cart = await Cart.findOneAndDelete({ orderby: userId });
-  // If the cart is empty, send a message and return
-  if (!cart) {
-    return res.status(404).json({ message: "Cart is empty" });
-  }
-
-  res.json(cart);
-};
 
 module.exports = {
   createUser,
@@ -603,15 +387,5 @@ module.exports = {
   updateUserDetails,
   forgotPassword,
   resetPassword,
-  getWishlist,
   saveAddress,
-  applyCoupon,
-  createOrder,
-  getOrders,
-  updateOrderStatus,
-  getAllOrders,
-  getOrderById,
-  userCart,
-  getUserCart,
-  emptyCart,
 };

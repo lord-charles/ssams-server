@@ -18,8 +18,8 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use("/data-set", dataSet);
-app.use("/user", usersRouter);
+app.use("/express/data-set", dataSet);
+app.use("/express/user", usersRouter);
 
 
 

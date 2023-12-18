@@ -14,22 +14,22 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
     },
-    mobile: {
+    username: {
       type: String,
-      required: true,
       unique: true,
     },
-    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+    phoneNumber: {
+      type: String,
+      required: false,
+    },
     passwordHash: {
       type: String,
       required: true,
     },
     isAdmin: {
       type: Boolean,
-      required: true,
+      default: false,
     },
     isBlocked: {
       type: Boolean,
@@ -37,12 +37,33 @@ const userSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      default: "Egerton University, Main Campus, Njoro",
+      default: "",
     },
-    cart: {
-      type: Array,
-      default: [],
+    userType: {
+      type: String,
+      enum: ["Teacher", "HeadTeacher", "Secretariate", "SuperAdmin"],
+      default: null,
+      required: true,
     },
+    dutyAssigned: [
+      {
+        isAssigned: {
+          type: Boolean,
+          default: false,
+          required: true,
+        },
+        schoolName: {
+          type: String,
+          default: null,
+          required: true,
+        },
+      },
+    ],
+    statesAsigned: [
+      {
+        type: String,
+      },
+    ],
     dateJoined: {
       type: Date,
       default: Date.now,

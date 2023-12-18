@@ -83,7 +83,7 @@ const schoolDataSchema = new mongoose.Schema({
       },
     },
   ],
- disabilities: [
+  disabilities: [
     {
       disabilities: {
         difficultySeeing: {
